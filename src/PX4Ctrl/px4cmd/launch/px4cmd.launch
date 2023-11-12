@@ -1,0 +1,12 @@
+<launch>
+
+	<node pkg="px4cmd" type="px4cmd_node" name="px4cmd" output="screen">
+
+        <rosparam command="load" file="$(find px4cmd)/config/ctrl_param_fpv.yaml" />
+
+        <remap from="~odom" to="/vision_to_mavros/vision_odom" />
+		<remap from="~cmd" to="/vision_to_mavros/planner_cmd" />
+
+	</node>
+
+</launch>

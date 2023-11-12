@@ -1,0 +1,12 @@
+<launch>
+    <node pkg="vision_to_mavros"  type="tf_vision_to_mavros_node" name="tf_vision_to_mavros" output="screen" args="vins ENU">
+        
+        <remap from="~vision_pose" to="/mavros/vision_pose/pose" />
+        <remap from="~vision_odom" to="/vision_to_mavros/vision_odom" />
+        <remap from="~planner_cmd" to="/vision_to_mavros/planner_cmd" />
+
+        <remap from="~odom" to="/vins_estimator/imu_propagate" />
+		<remap from="~cmd" to="/position_cmd" />
+
+    </node>
+</launch>
