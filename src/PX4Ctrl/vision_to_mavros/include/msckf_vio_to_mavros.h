@@ -181,7 +181,6 @@ void TF_EDN_to_ENU::command_callback(quadrotor_msgs::PositionCommandConstPtr pMs
     cmd.acceleration.z = pMsg->acceleration.z;
 
     cmd.yaw = uav_utils::normalize_angle(pMsg->yaw - M_PI/2);
-    // ROS_INFO("command yaw: %f", cmd.yaw * 180 / M_PI);
     cmd.yaw_dot = pMsg->yaw_dot;
 
     planner_cmd_pub.publish(cmd);

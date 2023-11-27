@@ -1,10 +1,15 @@
-#include "fcuData.h"
+/**
+ * @file input.cpp
+ * @brief This file defines the structure of the data from the flight control units (FCU), odometry and setpoint command. 
+ */
+#include "input.h"
 
 
-/**************/
-/* State_Data */
-/**************/
-/** @brief State_Data constructor */
+/***********************************/
+/* Flight Control Units (FCU) data */
+/***********************************/
+
+/** @brief State data */
 State_Data_t::State_Data_t(const Parameter_t &param) : param_(param)
 {
     rcv_stamp = ros::Time(0);
@@ -13,7 +18,7 @@ State_Data_t::State_Data_t(const Parameter_t &param) : param_(param)
     state_before_offboard = current_state;
 }
 
-/** @brief State_Data callback */
+
 void State_Data_t::feed(const mavros_msgs::StateConstPtr pMsg)
 {
     rcv_stamp = ros::Time::now();
@@ -21,10 +26,7 @@ void State_Data_t::feed(const mavros_msgs::StateConstPtr pMsg)
 }
 
 
-/***********/
-/* RC_Data */
-/***********/
-/** @brief RC_Data constructor */
+/** @brief Remote Control data */
 RC_Data_t::RC_Data_t(const Parameter_t &param) : param_(param) 
 {
     rcv_stamp = ros::Time(0);
@@ -43,7 +45,7 @@ RC_Data_t::RC_Data_t(const Parameter_t &param) : param_(param)
     }
 }
 
-/** @brief RC_Data callback */
+
 void RC_Data_t::feed(mavros_msgs::RCInConstPtr pMsg)
 {
     rcv_stamp = ros::Time::now();
@@ -160,16 +162,13 @@ void RC_Data_t::feed(mavros_msgs::RCInConstPtr pMsg)
 }
 
 
-/****************/
-/* Battery_Data */
-/****************/
-/** @brief Battery_Data constructor */
+/** @brief Battery data */
 Battery_Data_t::Battery_Data_t(const Parameter_t &param) : param_(param) 
 {
     rcv_stamp = ros::Time(0);
 }
 
-/** @brief Battery_Data callback */
+
 void Battery_Data_t::feed(sensor_msgs::BatteryStateConstPtr pMsg)
 {
     rcv_stamp = ros::Time::now();
@@ -177,16 +176,13 @@ void Battery_Data_t::feed(sensor_msgs::BatteryStateConstPtr pMsg)
 }
 
 
-/************/
-/* Imu_Data */
-/************/
-/** @brief Imu_Data constructor */
+/** @brief Inertial Measurement Unit data */
 Imu_Data_t::Imu_Data_t(const Parameter_t &param) : param_(param) 
 {
     rcv_stamp = ros::Time(0);
 }
 
-/** @brief Imu_Data callback */
+
 void Imu_Data_t::feed(sensor_msgs::ImuConstPtr pMsg)
 {
     rcv_stamp = ros::Time::now();
@@ -204,4 +200,53 @@ void Imu_Data_t::feed(sensor_msgs::ImuConstPtr pMsg)
     a(0) = imu_msg.linear_acceleration.x;
     a(1) = imu_msg.linear_acceleration.y;
     a(2) = imu_msg.linear_acceleration.z;
+}
+
+
+/*****************************/
+/* Odometry and Command data */
+/*****************************/
+
+/** @brief Odom data */
+Odom_Data_t::Odom_Data_t(const Parameter_t &param) : param_(param) 
+{
+    rcv_stamp = ros::Time(0);
+    q.setIdentity();
+}
+
+void Odom_Data_t::feed(nav_msgs::OdometryConstPtr pMsg)
+{
+    rcv_stamp = ros::Time::now();
+    odom_msg = *pMsg;
+
+    uav_utils::extract_odometry(pMsg, p, v, q, w);
+}
+
+
+/** @brief Command data */
+Command_Data_t::Command_Data_t(const Parameter_t &param) : param_(param) 
+{
+    rcv_stamp = ros::Time(0);
+}
+
+
+void Command_Data_t::feed(quadrotor_msgs::PositionCommandConstPtr pMsg)
+{
+    rcv_stamp = ros::Time::now();
+    msg = *pMsg;
+    
+    p(0) = msg.position.x;
+    p(1) = msg.position.y;
+    p(2) = msg.position.z;
+
+    v(0) = msg.velocity.x;
+    v(1) = msg.velocity.y;
+    v(2) = msg.velocity.z;
+
+    a(0) = msg.acceleration.x;
+    a(1) = msg.acceleration.y;
+    a(2) = msg.acceleration.z;
+
+    yaw = uav_utils::normalize_angle(msg.yaw);
+    yaw_rate = msg.yaw_dot;
 }

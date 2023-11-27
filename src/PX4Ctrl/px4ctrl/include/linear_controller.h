@@ -1,11 +1,9 @@
-#ifndef __CONTROLLER_H
-#define __CONTROLLER_H
+#ifndef __LINEAR_CONTROLLER_H
+#define __LINEAR_CONTROLLER_H
 
-#include "inputData.h"
-#include "readParam.h"
-
-#include <Eigen/Dense>
 #include <queue>
+
+#include "input.h"
 
 
 /** @brief Desired position, velocity, acceleration, attitude of drone */

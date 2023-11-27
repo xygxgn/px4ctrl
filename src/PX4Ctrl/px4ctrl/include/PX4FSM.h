@@ -1,28 +1,26 @@
-#ifndef __FSM_H
-#define __FSM_H
+#ifndef __PX4FSM_H
+#define __PX4FSM_H
 
 #include <mavros_msgs/SetMode.h>
 #include <mavros_msgs/AttitudeTarget.h>
 #include <mavros_msgs/PositionTarget.h>
 
-#include "readParam.h"
-#include "inputData.h"
-#include "controller.h"
+#include "linear_controller.h"
 
 
-class FSM
+extern ros::Publisher set_attitude_pub;
+
+extern ros::ServiceClient mode_srv;
+extern ros::ServiceClient arming_srv;
+extern ros::ServiceClient reboot_srv;
+
+
+class PX4FSM
 {
 public:
     FCU_Data_t fcu_data;
     Odom_Data_t odom_data;
     Command_Data_t command_data;
-
-
-    ros::Publisher fcu_set_attitude_pub; // The publisher used to advertise the setpoint commands
-    
-	ros::ServiceClient fcu_mode_srv; // The service used to set the mode of FCU
-	ros::ServiceClient fcu_arming_srv; // The service used to arming the drone
-	ros::ServiceClient fcu_reboot_srv; // The service used to reboot FCU
 
     LinearController controller;
 
@@ -31,18 +29,12 @@ public:
 
 
     /* Constructor */
-    FSM(const Parameter_t &);
+    PX4FSM(const Parameter_t &);
 
     void process();
 
 private:
     Parameter_t param_;
-
-    /* FSM clock */
-    struct FSM_CLOCK
-    {
-        ros::Time command;
-    } fsm_clock;
 
     /* State of drone */
     enum State_t
@@ -51,6 +43,7 @@ private:
         HOVER,
         COMMAND
     } state_;
+
 
     /* Set hover mode */
     void set_hover_with_rc();

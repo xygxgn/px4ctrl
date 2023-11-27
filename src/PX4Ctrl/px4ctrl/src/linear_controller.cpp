@@ -2,7 +2,7 @@
 /* Acknowledgement: github.com/uzh-rpg/rpg_quadrotor_control */
 /*************************************************************/
 
-#include "controller.h"
+#include "linear_controller.h"
 
 
 void LinearController::resetThrustMapping()
@@ -10,6 +10,7 @@ void LinearController::resetThrustMapping()
     thrust2acc_ = param_.gravity / param_.thrust_mapping.hover_percentage;
     P_ = 1e6;
 }
+
 
 /** @brief Estimate thrust2acc_(mapping from thrust to acceleration) 
  * @param est_acc Acceleration provided by IMU accelerometer
@@ -52,6 +53,7 @@ bool LinearController::estimateThrustModel(const Eigen::Vector3d &est_acc, const
     return false;
 }
 
+
 /** @brief Compute u.thrust and u.q, controller gains and other parameters are in param_
  * @param des Desired PVAQ
  * @param odom Odometry data of drone
@@ -71,6 +73,7 @@ void LinearController::calculateControl(const Desired_PVAQ_t &des, const Odom_Da
 
     /* compute throttle percentage (desired collective thrust) */
     u.thrust = des_acc(2) / thrust2acc_;
+    ROS_DEBUG("convergence thrust: %f", u.thrust);
 
 
     /* 2.Compute attitude */
@@ -81,7 +84,6 @@ void LinearController::calculateControl(const Desired_PVAQ_t &des, const Odom_Da
     
     roll = (des_acc(0) * sin - des_acc(1) * cos) / param_.gravity;
     pitch = (des_acc(0) * cos + des_acc(1) * sin) / param_.gravity;
-    // ROS_INFO("\ndelta_yaw: imu - odom = %f", (uav_utils::get_yaw_from_quaternion(imu.q) - yaw_odom) * 180/M_PI);
     yaw = uav_utils::normalize_angle(des.yaw + uav_utils::get_yaw_from_quaternion(imu.q) - yaw_odom);
 
     Eigen::Quaterniond q = uav_utils::ypr_to_quaternion(Eigen::Vector3d(yaw, pitch, roll));

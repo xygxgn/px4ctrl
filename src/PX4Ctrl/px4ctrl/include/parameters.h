@@ -1,7 +1,8 @@
-#ifndef __READPARAM_H
-#define __READPARAM_H
+#ifndef __PARAMETERS_H
+#define __PARAMETERS_H
 
 #include <ros/ros.h>
+
 
 class Parameter_t
 {
@@ -55,11 +56,7 @@ private:
     template <typename TName, typename TVal>
     void read_essential_param(const ros::NodeHandle &nh, const TName &name, TVal &val)
     {
-        if (nh.getParam(name, val))
-        {
-            /* pass */
-        }
-        else
+        if (!nh.getParam(name, val))
         {
             ROS_ERROR_STREAM("Read param: " << name << " failed.");
             ROS_BREAK();

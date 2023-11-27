@@ -1,11 +1,11 @@
 /**
- * @file fsm.cpp
- * @brief This file defines the structure finite state machine (FSM). 
+ * @file PX4FSM.cpp
+ * @brief This file defines the structure finite state machine (FSM) of PX4. 
  */
-#include "fsm.h"
+#include "PX4FSM.h"
 
 
-FSM::FSM(const Parameter_t &param) : param_(param), 
+PX4FSM::PX4FSM(const Parameter_t &param) : param_(param), 
     fcu_data(FCU_Data_t(param)), 
     odom_data(Odom_Data_t(param)), 
     command_data(Command_Data_t(param)),
@@ -13,11 +13,10 @@ FSM::FSM(const Parameter_t &param) : param_(param),
 {
     state_ = MANUAL;
     hover_pose.setZero();
-    fsm_clock.command = ros::Time(0);
 }
 
 
-void FSM::process()
+void PX4FSM::process()
 {
     ros::Time now_time = ros::Time::now();
 
@@ -41,17 +40,17 @@ void FSM::process()
         {
             if (!odom_data.is_received(now_time))
             {
-                ROS_ERROR("[px4ctrl] Reject HOVER(L2). No odom!");
+                ROS_ERROR_STREAM_ONCE("[px4ctrl] Reject HOVER(L2). No odom!");
             }
             else if (odom_data.v.norm() > 3.0)
             {
-                ROS_ERROR("[px4ctrl] Reject HOVER(L2). \
-                    Odom_Vel=%fm/s, which seems that the locolization module goes wrong!", odom_data.v.norm());
+                ROS_ERROR_STREAM_ONCE("[px4ctrl] Reject HOVER(L2). "
+                    "Odom_Vel=" << odom_data.v.norm() << "m/s, which seems that the locolization module goes wrong!");
             }
             else if (command_data.is_received(now_time))
             {
-                ROS_ERROR("[px4ctrl] Reject COMMAND(L3). \
-                    Sending commands before toggling into COMMAND is not allowed. Stop sending commands now!");
+                ROS_ERROR_STREAM_ONCE("[px4ctrl] Reject COMMAND(L3). "
+                    "Sending commands before toggling into COMMAND is not allowed. Please check planner!");
             }
             else /* enter HOVER */
             {
@@ -113,12 +112,10 @@ void FSM::process()
                 ROS_WARN("[px4ctrl] Not allow setpoint command.");
             }
             
-            if (command_data.is_received(now_time) && (now_time - fsm_clock.command).toSec() > 0.5)
+            if (command_data.is_received(now_time))
             {
-                fsm_clock.command = now_time;
-                
-                ROS_WARN("[px4ctrl] Reject COMMAND(L3). \
-                    Sending commands before toggling into COMMAND, which is not recommanded.");
+                ROS_WARN_STREAM_THROTTLE(5.0, "[px4ctrl] Reject COMMAND(L3). "
+                    "Sending commands before toggling into COMMAND, which is not recommanded.");
             }
 
             set_hover_with_rc(); // Adjusting the hovering pose by RC
@@ -211,7 +208,7 @@ void FSM::process()
  * @note MUST align odometry frame with FCU frame!!!
  * @return Desired PVAQ
  */
-Desired_PVAQ_t FSM::get_command_des()
+Desired_PVAQ_t PX4FSM::get_command_des()
 {
 	Desired_PVAQ_t des;
 	des.p = command_data.p;
@@ -228,7 +225,7 @@ Desired_PVAQ_t FSM::get_command_des()
  * @note MUST align odometry frame with FCU frame!!!
  * @return Desired PVAQ
  */
-Desired_PVAQ_t FSM::get_hover_des()
+Desired_PVAQ_t PX4FSM::get_hover_des()
 {
 	Desired_PVAQ_t des;
 	des.p = hover_pose.head<3>();
@@ -236,7 +233,7 @@ Desired_PVAQ_t FSM::get_hover_des()
 	des.a = Eigen::Vector3d::Zero();
 	des.yaw = hover_pose(3);
 	des.yaw_rate = 0.0;
-    // ROS_INFO("\nx = %.12f\ny = %.12f\nz = %.12f\nyaw:%f", hover_pose(0), hover_pose(1),hover_pose(2),hover_pose(3));
+    ROS_DEBUG("\nx = %.12f\ny = %.12f\nz = %.12f\nyaw:%f", hover_pose(0), hover_pose(1),hover_pose(2),hover_pose(3));
 
 	return des;
 }
@@ -244,7 +241,7 @@ Desired_PVAQ_t FSM::get_hover_des()
 
 /** @brief Set hover pose with the aid of odometry.
  */
-void FSM::set_hover_with_odom()
+void PX4FSM::set_hover_with_odom()
 {
 	hover_pose.head<3>() = odom_data.p;
 	hover_pose(3) = uav_utils::get_yaw_from_quaternion(odom_data.q);
@@ -254,7 +251,7 @@ void FSM::set_hover_with_odom()
 
 
 /** @brief Set hover pose with the aid of RC (Reach a similar result to POSITION mode) */
-void FSM::set_hover_with_rc()
+void PX4FSM::set_hover_with_rc()
 {
 	ros::Time now = ros::Time::now();
 	double delta_t = (now - last_set_hover_pose_time).toSec();
@@ -273,7 +270,7 @@ void FSM::set_hover_with_rc()
 /** @brief toggle OFFBOARD or not, the setpoint publishing rate must be faster than 2Hz
  * @param on_off enter/exit OFFBOARD mode if true/false
  */
-bool FSM::toggle_offboard(bool on_off)
+bool PX4FSM::toggle_offboard(bool on_off)
 {
     mavros_msgs::SetMode offb_set_mode;
 
@@ -281,7 +278,7 @@ bool FSM::toggle_offboard(bool on_off)
     {
         if (fcu_data.state_data.current_state.mode == "OFFBOARD")
         {
-            ROS_INFO("\"OFFBOARD\" enabled!"); // already \"OFFBOARD\" mode!
+            ROS_INFO_STREAM_THROTTLE(1.0, "\"OFFBOARD\" enabled!"); // already \"OFFBOARD\" mode!
             return true;
         }
 
@@ -290,48 +287,47 @@ bool FSM::toggle_offboard(bool on_off)
         {
             fcu_data.state_data.state_before_offboard.mode = "MANUAL";
         }
-
         offb_set_mode.request.custom_mode = "OFFBOARD";
-        if (!(fcu_mode_srv.call(offb_set_mode) && offb_set_mode.response.mode_sent))
+        if (mode_srv.call(offb_set_mode) && offb_set_mode.response.mode_sent)
         {
-            ROS_ERROR("Enter \"OFFBOARD\" rejected by PX4!");
-            return false;
+            ROS_INFO_STREAM_THROTTLE(1.0, "\"OFFBOARD\" enabled");
+            return true;
         }
-        ROS_INFO("\"OFFBOARD\" enabled");
+
+        ROS_ERROR_STREAM_THROTTLE(1.0, "Enter \"OFFBOARD\" rejected by PX4!");
     }
     else
     {
         if (!(fcu_data.state_data.current_state.mode == "OFFBOARD"))
         {
-            ROS_INFO("\"OFFBOARD\" disabled!"); // already \"OFFBOARD\" mode!
+            ROS_INFO_STREAM_THROTTLE(1.0, "\"OFFBOARD\" disabled!"); // already \"OFFBOARD\" mode!
             return true;
         }
 
         offb_set_mode.request.custom_mode = fcu_data.state_data.state_before_offboard.mode;
-        if (fcu_mode_srv.call(offb_set_mode) && offb_set_mode.response.mode_sent)
+        if (mode_srv.call(offb_set_mode) && offb_set_mode.response.mode_sent)
         {
-            ROS_INFO("\"OFFBOARD\" disabled!"); // enter the state before OFFBOARD
+            ROS_INFO_STREAM_THROTTLE(1.0, "\"OFFBOARD\" disabled!"); // enter the state before OFFBOARD
             return true;
         }
 
         offb_set_mode.request.custom_mode = "MANUAL";
-        if (fcu_mode_srv.call(offb_set_mode) && offb_set_mode.response.mode_sent)
+        if (mode_srv.call(offb_set_mode) && offb_set_mode.response.mode_sent)
         {
-
-            ROS_WARN("Exit \"OFFBOARD\" but enter \"MANUAL\" unfortunately!");
+            ROS_WARN_STREAM_THROTTLE(1.0, "Exit \"OFFBOARD\" but enter \"MANUAL\"!");
             return true;
         }
 
-        ROS_ERROR("Exit \"OFFBOARD\" rejected by PX4!");
-        return false;
+        ROS_ERROR_STREAM_THROTTLE(1.0, "Exit \"OFFBOARD\" rejected by PX4!");
     }
-    // ROS_INFO("Toggle \"OFFBOARD\" successfully!");
-    return true;
+    
+    // ROS_INFO("Toggle \"OFFBOARD\" failed!");
+    return false;
 }
 
 
 /** @brief publish attitude control messages to /mavros/setpoint_raw/attitude */
-void FSM::publish_attitude_ctrl(const Controller_t &u, const ros::Time &now_time)
+void PX4FSM::publish_attitude_ctrl(const Controller_t &u, const ros::Time &now_time)
 {
     mavros_msgs::AttitudeTarget msg;
     msg.header.stamp = now_time;
@@ -348,5 +344,5 @@ void FSM::publish_attitude_ctrl(const Controller_t &u, const ros::Time &now_time
     msg.thrust = u.thrust;
 
 
-    fcu_set_attitude_pub.publish(msg);
+    set_attitude_pub.publish(msg);
 }
