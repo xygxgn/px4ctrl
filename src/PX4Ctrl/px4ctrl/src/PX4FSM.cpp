@@ -5,14 +5,22 @@
 #include "PX4FSM.h"
 
 
-PX4FSM::PX4FSM(const Parameter_t &param) : param_(param), 
-    fcu_data(FCU_Data_t(param)), 
-    odom_data(Odom_Data_t(param)), 
-    command_data(Command_Data_t(param)),
-    controller(LinearController(param))
+PX4FSM::PX4FSM()
 {
     state_ = MANUAL;
     hover_pose.setZero();
+}
+
+
+void PX4FSM::set_parameter(const Parameter_t &param)
+{
+    max_manual_vel = param.max_manual_vel;
+    rc_reverse = param.rc_reverse;
+
+    fcu_data.set_parameter(param);
+    odom_data.set_parameter(param);
+    command_data.set_parameter(param);
+    controller.set_parameter(param);
 }
 
 
@@ -182,7 +190,7 @@ void PX4FSM::process()
     /********************************/
 	if (state_ == HOVER || state_ == COMMAND)
 	{
-		controller.estimateThrustModel(fcu_data.imu_data.a, param_);
+		controller.estimateThrustModel(fcu_data.imu_data.a);
 	}
 
     controller.calculateControl(des, odom_data, fcu_data.imu_data, u);
@@ -257,10 +265,10 @@ void PX4FSM::set_hover_with_rc()
 	double delta_t = (now - last_set_hover_pose_time).toSec();
 	last_set_hover_pose_time = now;
 
-	hover_pose(0) += fcu_data.rc_data.channels[1] * param_.max_manual_vel * delta_t * (param_.rc_reverse.pitch ? 1 : -1);
-	hover_pose(1) += fcu_data.rc_data.channels[0] * param_.max_manual_vel * delta_t * (param_.rc_reverse.roll ? 1 : -1);
-	hover_pose(2) += fcu_data.rc_data.channels[2] * param_.max_manual_vel * delta_t * (param_.rc_reverse.throttle ? -1 : 1);
-	hover_pose(3) += fcu_data.rc_data.channels[3] * param_.max_manual_vel * delta_t * (param_.rc_reverse.yaw ? 1 : -1);
+	hover_pose(0) += fcu_data.rc_data.channels[1] * max_manual_vel * delta_t * (rc_reverse.pitch ? 1 : -1);
+	hover_pose(1) += fcu_data.rc_data.channels[0] * max_manual_vel * delta_t * (rc_reverse.roll ? 1 : -1);
+	hover_pose(2) += fcu_data.rc_data.channels[2] * max_manual_vel * delta_t * (rc_reverse.throttle ? -1 : 1);
+	hover_pose(3) += fcu_data.rc_data.channels[3] * max_manual_vel * delta_t * (rc_reverse.yaw ? 1 : -1);
 
 	if (hover_pose(2) < -0.3)
 		hover_pose(2) = -0.3;

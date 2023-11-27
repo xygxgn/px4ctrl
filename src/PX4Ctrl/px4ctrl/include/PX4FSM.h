@@ -29,12 +29,15 @@ public:
 
 
     /* Constructor */
-    PX4FSM(const Parameter_t &);
+    PX4FSM();
+
+    void set_parameter(const Parameter_t &);
 
     void process();
 
 private:
-    Parameter_t param_;
+    double max_manual_vel;
+    Parameter_t::RCReverse rc_reverse;
 
     /* State of drone */
     enum State_t

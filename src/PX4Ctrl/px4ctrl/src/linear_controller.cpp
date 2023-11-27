@@ -5,28 +5,42 @@
 #include "linear_controller.h"
 
 
+LinearController::LinearController() 
+{
+    
+}
+
+
 void LinearController::resetThrustMapping()
 {
-    thrust2acc_ = param_.gravity / param_.thrust_mapping.hover_percentage;
-    P_ = 1e6;
+    thrust2acc = gravity / hover_percentage;
+    P = 1e6;
+}
+
+
+void LinearController::set_parameter(const Parameter_t &param)
+{
+    hover_percentage = param.thrust_mapping.hover_percentage;
+    gravity = param.gravity;
+    gain = param.gain;
+    resetThrustMapping();
 }
 
 
 /** @brief Estimate thrust2acc_(mapping from thrust to acceleration) 
  * @param est_acc Acceleration provided by IMU accelerometer
- * @param param fpv parameters
 */
-bool LinearController::estimateThrustModel(const Eigen::Vector3d &est_acc, const Parameter_t &param)
+bool LinearController::estimateThrustModel(const Eigen::Vector3d &est_acc)
 {
     ros::Time now_time = ros::Time::now();
-    while (timed_thrusts_.size() >= 1)
+    while (timed_thrusts.size() >= 1)
     {
         /* Choose data before 35~45ms ago */
-        std::pair<ros::Time, double> timed_thrust_ = timed_thrusts_.front();
-        double time_passed = (now_time - timed_thrust_.first).toSec();
+        std::pair<ros::Time, double> timed_thrust = timed_thrusts.front();
+        double time_passed = (now_time - timed_thrust.first).toSec();
         if (time_passed > 0.045)
         {
-            timed_thrusts_.pop();
+            timed_thrusts.pop();
             continue;
         }
         if (time_passed < 0.035)
@@ -37,16 +51,16 @@ bool LinearController::estimateThrustModel(const Eigen::Vector3d &est_acc, const
         /***********************************************************/
         /* Recursive least squares algorithm with vanishing memory */
         /***********************************************************/
-        double thrust = timed_thrust_.second;
-        timed_thrusts_.pop();
+        double thrust = timed_thrust.second;
+        timed_thrusts.pop();
 
         /********************************************/
-        /* Model: est_acc(2) = thrust2acc_ * thrust */
+        /* Model: est_acc(2) = thrust2acc * thrust */
         /********************************************/
-        double gamma = 1 / (rho2_ + thrust * P_ * thrust);
-        double K = gamma * P_ * thrust; // filtering gain
-        thrust2acc_ = thrust2acc_ + K * (est_acc(2) - thrust * thrust2acc_); // posteriori estimate
-        P_ = (1 - K * thrust) * P_ / rho2_; // posteriori covariance
+        double gamma = 1 / (rho2 + thrust * P * thrust);
+        double K = gamma * P * thrust; // filtering gain
+        thrust2acc = thrust2acc + K * (est_acc(2) - thrust * thrust2acc); // posteriori estimate
+        P = (1 - K * thrust) * P / rho2; // posteriori covariance
 
         return true;
     }
@@ -54,7 +68,7 @@ bool LinearController::estimateThrustModel(const Eigen::Vector3d &est_acc, const
 }
 
 
-/** @brief Compute u.thrust and u.q, controller gains and other parameters are in param_
+/** @brief Compute u.thrust and u.q, controller gains and other parameters are in param
  * @param des Desired PVAQ
  * @param odom Odometry data of drone
  * @param imu Imu data of drone
@@ -66,13 +80,13 @@ void LinearController::calculateControl(const Desired_PVAQ_t &des, const Odom_Da
     // compute disired acceleration
     Eigen::Vector3d des_acc(0.0, 0.0, 0.0);
     Eigen::Vector3d Kp, Kv;
-    Kp << param_.gain.Kp0, param_.gain.Kp1, param_.gain.Kp2;
-    Kv << param_.gain.Kv0, param_.gain.Kv1, param_.gain.Kv2;
+    Kp << gain.Kp0, gain.Kp1, gain.Kp2;
+    Kv << gain.Kv0, gain.Kv1, gain.Kv2;
     des_acc = des.a + Kv.asDiagonal() * (des.v - odom.v) + Kp.asDiagonal() * (des.p - odom.p);
-    des_acc += Eigen::Vector3d(0.0, 0.0, param_.gravity); // counteract gravity
+    des_acc += Eigen::Vector3d(0.0, 0.0, gravity); // counteract gravity
 
     /* compute throttle percentage (desired collective thrust) */
-    u.thrust = des_acc(2) / thrust2acc_;
+    u.thrust = des_acc(2) / thrust2acc;
     ROS_DEBUG("convergence thrust: %f", u.thrust);
 
 
@@ -82,8 +96,8 @@ void LinearController::calculateControl(const Desired_PVAQ_t &des, const Odom_Da
     double sin = std::sin(yaw_odom);
     double cos = std::cos(yaw_odom);
     
-    roll = (des_acc(0) * sin - des_acc(1) * cos) / param_.gravity;
-    pitch = (des_acc(0) * cos + des_acc(1) * sin) / param_.gravity;
+    roll = (des_acc(0) * sin - des_acc(1) * cos) / gravity;
+    pitch = (des_acc(0) * cos + des_acc(1) * sin) / gravity;
     yaw = uav_utils::normalize_angle(des.yaw + uav_utils::get_yaw_from_quaternion(imu.q) - yaw_odom);
 
     Eigen::Quaterniond q = uav_utils::ypr_to_quaternion(Eigen::Vector3d(yaw, pitch, roll));
@@ -98,10 +112,10 @@ void LinearController::calculateControl(const Desired_PVAQ_t &des, const Odom_Da
     
 
     /* 3.Used for thrust to acceleration mapping estimation */
-    timed_thrusts_.push(std::pair<ros::Time, double>(ros::Time::now(), u.thrust));
-    while (timed_thrusts_.size() > 100)
+    timed_thrusts.push(std::pair<ros::Time, double>(ros::Time::now(), u.thrust));
+    while (timed_thrusts.size() > 100)
     {
-        timed_thrusts_.pop();
+        timed_thrusts.pop();
     }
 
 }

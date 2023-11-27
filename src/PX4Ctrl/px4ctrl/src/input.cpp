@@ -10,7 +10,7 @@
 /***********************************/
 
 /** @brief State data */
-State_Data_t::State_Data_t(const Parameter_t &param) : param_(param)
+State_Data_t::State_Data_t()
 {
     rcv_stamp = ros::Time(0);
 
@@ -27,7 +27,7 @@ void State_Data_t::feed(const mavros_msgs::StateConstPtr pMsg)
 
 
 /** @brief Remote Control data */
-RC_Data_t::RC_Data_t(const Parameter_t &param) : param_(param) 
+RC_Data_t::RC_Data_t()
 {
     rcv_stamp = ros::Time(0);
 
@@ -163,7 +163,7 @@ void RC_Data_t::feed(mavros_msgs::RCInConstPtr pMsg)
 
 
 /** @brief Battery data */
-Battery_Data_t::Battery_Data_t(const Parameter_t &param) : param_(param) 
+Battery_Data_t::Battery_Data_t()
 {
     rcv_stamp = ros::Time(0);
 }
@@ -177,7 +177,7 @@ void Battery_Data_t::feed(sensor_msgs::BatteryStateConstPtr pMsg)
 
 
 /** @brief Inertial Measurement Unit data */
-Imu_Data_t::Imu_Data_t(const Parameter_t &param) : param_(param) 
+Imu_Data_t::Imu_Data_t()
 {
     rcv_stamp = ros::Time(0);
 }
@@ -208,7 +208,7 @@ void Imu_Data_t::feed(sensor_msgs::ImuConstPtr pMsg)
 /*****************************/
 
 /** @brief Odom data */
-Odom_Data_t::Odom_Data_t(const Parameter_t &param) : param_(param) 
+Odom_Data_t::Odom_Data_t()
 {
     rcv_stamp = ros::Time(0);
     q.setIdentity();
@@ -224,7 +224,7 @@ void Odom_Data_t::feed(nav_msgs::OdometryConstPtr pMsg)
 
 
 /** @brief Command data */
-Command_Data_t::Command_Data_t(const Parameter_t &param) : param_(param) 
+Command_Data_t::Command_Data_t()
 {
     rcv_stamp = ros::Time(0);
 }

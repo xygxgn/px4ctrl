@@ -19,6 +19,8 @@ class Base_Data_t
 {
 public:
     ros::Time rcv_stamp; // The timestamp of the received data
+    double msg_timeout;
+    virtual void set_parameter(const Parameter_t &) = 0;
     virtual inline bool is_received(const ros::Time &) const = 0;
 };
 
@@ -35,15 +37,17 @@ public:
     mavros_msgs::State state_before_offboard;
 
 
-    State_Data_t(const Parameter_t &);
-    
-    void feed(const mavros_msgs::StateConstPtr);
+    State_Data_t();
+
+    virtual void set_parameter(const Parameter_t &param) override {
+        msg_timeout = param.msg_timeout.state; }
 
     virtual inline bool is_received(const ros::Time &now_time) const override { 
-        return (now_time - rcv_stamp).toSec() < param_.msg_timeout.state; }
+        return (now_time - rcv_stamp).toSec() < msg_timeout; }
+
+    void feed(const mavros_msgs::StateConstPtr);
 
 private:
-    Parameter_t param_;
 };
 
 
@@ -75,15 +79,18 @@ public:
     bool toggle_reboot;
 
 
-    RC_Data_t(const Parameter_t &);
+    RC_Data_t();
+
+    virtual void set_parameter(const Parameter_t &param) override {
+        msg_timeout = param.msg_timeout.rc; }
+
+    virtual inline bool is_received(const ros::Time &now_time) const override { 
+        return (now_time - rcv_stamp).toSec() < msg_timeout; }
 
     void feed(mavros_msgs::RCInConstPtr);
-    
-    virtual inline bool is_received(const ros::Time &now_time) const override { 
-        return (now_time - rcv_stamp).toSec() < param_.msg_timeout.rc; }
 
 private:
-    Parameter_t param_;
+    
 };
 
 
@@ -94,15 +101,17 @@ public:
     sensor_msgs::BatteryState battery_msg;
 
 
-    Battery_Data_t(const Parameter_t &);
+    Battery_Data_t();
+
+    virtual void set_parameter(const Parameter_t &param) override {
+        msg_timeout = param.msg_timeout.battery; }
+
+    virtual inline bool is_received(const ros::Time &now_time) const override { 
+        return (now_time - rcv_stamp).toSec() < msg_timeout; }
 
     void feed(sensor_msgs::BatteryStateConstPtr);
 
-    virtual inline bool is_received(const ros::Time &now_time) const override { 
-        return (now_time - rcv_stamp).toSec() < param_.msg_timeout.battery; }
-
 private:
-    Parameter_t param_;
 };
 
 
@@ -118,15 +127,17 @@ public:
     Eigen::Vector3d a; // linear acceleration
 
 
-    Imu_Data_t(const Parameter_t &);
+    Imu_Data_t();
+
+    virtual void set_parameter(const Parameter_t &param) override {
+        msg_timeout = param.msg_timeout.imu; }
 
     void feed(sensor_msgs::ImuConstPtr);
 
     virtual inline bool is_received(const ros::Time &now_time) const override { 
-        return (now_time - rcv_stamp).toSec() < param_.msg_timeout.imu; }
+        return (now_time - rcv_stamp).toSec() < msg_timeout; }
 
 private:
-    const Parameter_t param_;
 };
 
 
@@ -140,12 +151,16 @@ public:
     Imu_Data_t imu_data;
 
 
-    FCU_Data_t(const Parameter_t &param) : param_(param), 
-        state_data(State_Data_t(param)), rc_data(RC_Data_t(param)), 
-        battery_data(Battery_Data_t(param)), imu_data(Imu_Data_t(param)) {}
+    FCU_Data_t() { };
 
+    void set_parameter(const Parameter_t &param) {
+        state_data.set_parameter(param); 
+        rc_data.set_parameter(param);
+        battery_data.set_parameter(param);
+        imu_data.set_parameter(param);
+        }
+    
 private:
-    Parameter_t param_;
 };
 
 
@@ -167,14 +182,17 @@ public:
     Eigen::Vector3d v; // linear velocity
 
     
-    Odom_Data_t(const Parameter_t &);
-    void feed(nav_msgs::OdometryConstPtr);
+    Odom_Data_t();
+
+    virtual void set_parameter(const Parameter_t &param) override {
+        msg_timeout = param.msg_timeout.odom; }
 
     virtual inline bool is_received(const ros::Time &now_time) const override { 
-        return (now_time - rcv_stamp).toSec() < param_.msg_timeout.odom; }
+        return (now_time - rcv_stamp).toSec() < msg_timeout; }
+
+    void feed(nav_msgs::OdometryConstPtr);
 
 private:
-    Parameter_t param_;
 };
 
 
@@ -193,15 +211,17 @@ public:
     double yaw_rate;
 
 
-    Command_Data_t(const Parameter_t &);
+    Command_Data_t();
+
+    virtual void set_parameter(const Parameter_t &param) override {
+        msg_timeout = param.msg_timeout.cmd; }
+
+    virtual inline bool is_received(const ros::Time &now_time) const override { 
+        return (now_time - rcv_stamp).toSec() < msg_timeout; }
 
     void feed(quadrotor_msgs::PositionCommandConstPtr);
 
-    virtual inline bool is_received(const ros::Time &now_time) const override { 
-        return (now_time - rcv_stamp).toSec() < param_.msg_timeout.cmd; }
-
 private:
-    const Parameter_t param_;
 };
 
 #endif

@@ -9,7 +9,8 @@ int main(int argc, char *argv[])
     Parameter_t param(nh);
 
     /* Finite state machine */
-    PX4FSM fsm(param);
+    PX4FSM fsm;
+    fsm.set_parameter(param);
 
     /* Register ROS Master */
     ROSRegister ros_register(nh, fsm);

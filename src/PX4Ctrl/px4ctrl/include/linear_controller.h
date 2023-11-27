@@ -46,22 +46,23 @@ struct Controller_t
 class LinearController
 {
 public:
-    LinearController() {}
-    LinearController(const Parameter_t &param) : param_(param) { resetThrustMapping(); }
-    bool estimateThrustModel(const Eigen::Vector3d &, const Parameter_t &);
+    LinearController();
+
+    void set_parameter(const Parameter_t &);
+    bool estimateThrustModel(const Eigen::Vector3d &);
     void calculateControl(const Desired_PVAQ_t &, const Odom_Data_t &, const Imu_Data_t &, Controller_t &);
     void resetThrustMapping();
     
 private:
-    Parameter_t param_; // fpv parameters
-
     /* Thrust queue of past time */
-    std::queue<std::pair<ros::Time, double>> timed_thrusts_;
+    std::queue<std::pair<ros::Time, double>> timed_thrusts;
 
     /* Thrust-accel mapping params */
-    const double rho2_ = 0.998; // do not change
-    double thrust2acc_, P_; // the estimate and covariance of mapping from thrust to acceleration
+    const double rho2 = 0.998; // do not change
+    double thrust2acc, P; // the estimate and covariance of mapping from thrust to acceleration
+    double gravity, hover_percentage;
 
+    Parameter_t::Gain gain;
 };
 
 
