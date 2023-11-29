@@ -7,20 +7,16 @@
 
 PX4FSM::PX4FSM()
 {
+    set_parameter();
     state_ = MANUAL;
     hover_pose.setZero();
 }
 
 
-void PX4FSM::set_parameter(const Parameter_t &param)
+void PX4FSM::set_parameter()
 {
-    max_manual_vel = param.max_manual_vel;
-    rc_reverse = param.rc_reverse;
-
-    fcu_data.set_parameter(param);
-    odom_data.set_parameter(param);
-    command_data.set_parameter(param);
-    controller.set_parameter(param);
+    max_manual_vel = Parameter_t::max_manual_vel;
+    rc_reverse = Parameter_t::rc_reverse;
 }
 
 

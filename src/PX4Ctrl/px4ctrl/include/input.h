@@ -20,7 +20,7 @@ class Base_Data_t
 public:
     ros::Time rcv_stamp; // The timestamp of the received data
     double msg_timeout;
-    virtual void set_parameter(const Parameter_t &) = 0;
+    virtual void set_parameter() = 0;
     virtual inline bool is_received(const ros::Time &) const = 0;
 };
 
@@ -39,8 +39,8 @@ public:
 
     State_Data_t();
 
-    virtual void set_parameter(const Parameter_t &param) override {
-        msg_timeout = param.msg_timeout.state; }
+    virtual void set_parameter() override {
+        msg_timeout = Parameter_t::msg_timeout.state; }
 
     virtual inline bool is_received(const ros::Time &now_time) const override { 
         return (now_time - rcv_stamp).toSec() < msg_timeout; }
@@ -81,8 +81,8 @@ public:
 
     RC_Data_t();
 
-    virtual void set_parameter(const Parameter_t &param) override {
-        msg_timeout = param.msg_timeout.rc; }
+    virtual void set_parameter() override {
+        msg_timeout = Parameter_t::msg_timeout.rc; }
 
     virtual inline bool is_received(const ros::Time &now_time) const override { 
         return (now_time - rcv_stamp).toSec() < msg_timeout; }
@@ -103,8 +103,8 @@ public:
 
     Battery_Data_t();
 
-    virtual void set_parameter(const Parameter_t &param) override {
-        msg_timeout = param.msg_timeout.battery; }
+    virtual void set_parameter() override {
+        msg_timeout = Parameter_t::msg_timeout.battery; }
 
     virtual inline bool is_received(const ros::Time &now_time) const override { 
         return (now_time - rcv_stamp).toSec() < msg_timeout; }
@@ -129,8 +129,8 @@ public:
 
     Imu_Data_t();
 
-    virtual void set_parameter(const Parameter_t &param) override {
-        msg_timeout = param.msg_timeout.imu; }
+    virtual void set_parameter() override {
+        msg_timeout = Parameter_t::msg_timeout.imu; }
 
     void feed(sensor_msgs::ImuConstPtr);
 
@@ -150,15 +150,7 @@ public:
     Battery_Data_t battery_data;
     Imu_Data_t imu_data;
 
-
     FCU_Data_t() { };
-
-    void set_parameter(const Parameter_t &param) {
-        state_data.set_parameter(param); 
-        rc_data.set_parameter(param);
-        battery_data.set_parameter(param);
-        imu_data.set_parameter(param);
-        }
     
 private:
 };
@@ -184,8 +176,8 @@ public:
     
     Odom_Data_t();
 
-    virtual void set_parameter(const Parameter_t &param) override {
-        msg_timeout = param.msg_timeout.odom; }
+    virtual void set_parameter() override {
+        msg_timeout = Parameter_t::msg_timeout.odom; }
 
     virtual inline bool is_received(const ros::Time &now_time) const override { 
         return (now_time - rcv_stamp).toSec() < msg_timeout; }
@@ -213,8 +205,8 @@ public:
 
     Command_Data_t();
 
-    virtual void set_parameter(const Parameter_t &param) override {
-        msg_timeout = param.msg_timeout.cmd; }
+    virtual void set_parameter() override {
+        msg_timeout = Parameter_t::msg_timeout.cmd; }
 
     virtual inline bool is_received(const ros::Time &now_time) const override { 
         return (now_time - rcv_stamp).toSec() < msg_timeout; }

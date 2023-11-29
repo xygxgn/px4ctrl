@@ -7,7 +7,8 @@
 
 LinearController::LinearController() 
 {
-    
+    set_parameter();
+    resetThrustMapping();
 }
 
 
@@ -18,12 +19,11 @@ void LinearController::resetThrustMapping()
 }
 
 
-void LinearController::set_parameter(const Parameter_t &param)
+void LinearController::set_parameter()
 {
-    hover_percentage = param.thrust_mapping.hover_percentage;
-    gravity = param.gravity;
-    gain = param.gain;
-    resetThrustMapping();
+    hover_percentage = Parameter_t::thrust_mapping.hover_percentage;
+    gravity = Parameter_t::gravity;
+    gain = Parameter_t::gain;
 }
 
 

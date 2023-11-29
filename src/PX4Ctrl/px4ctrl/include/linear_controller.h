@@ -48,7 +48,7 @@ class LinearController
 public:
     LinearController();
 
-    void set_parameter(const Parameter_t &);
+    void set_parameter();
     bool estimateThrustModel(const Eigen::Vector3d &);
     void calculateControl(const Desired_PVAQ_t &, const Odom_Data_t &, const Imu_Data_t &, Controller_t &);
     void resetThrustMapping();

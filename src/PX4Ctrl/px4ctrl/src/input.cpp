@@ -13,6 +13,7 @@
 State_Data_t::State_Data_t()
 {
     rcv_stamp = ros::Time(0);
+    set_parameter();
 
     current_state.mode = "MUNUAL";
     state_before_offboard = current_state;
@@ -30,6 +31,7 @@ void State_Data_t::feed(const mavros_msgs::StateConstPtr pMsg)
 RC_Data_t::RC_Data_t()
 {
     rcv_stamp = ros::Time(0);
+    set_parameter();
 
     last_mode = -1.0;
     last_gear = -1.0;
@@ -166,6 +168,7 @@ void RC_Data_t::feed(mavros_msgs::RCInConstPtr pMsg)
 Battery_Data_t::Battery_Data_t()
 {
     rcv_stamp = ros::Time(0);
+    set_parameter();
 }
 
 
@@ -180,6 +183,7 @@ void Battery_Data_t::feed(sensor_msgs::BatteryStateConstPtr pMsg)
 Imu_Data_t::Imu_Data_t()
 {
     rcv_stamp = ros::Time(0);
+    set_parameter();
 }
 
 
@@ -211,6 +215,7 @@ void Imu_Data_t::feed(sensor_msgs::ImuConstPtr pMsg)
 Odom_Data_t::Odom_Data_t()
 {
     rcv_stamp = ros::Time(0);
+    set_parameter();
     q.setIdentity();
 }
 
@@ -227,6 +232,7 @@ void Odom_Data_t::feed(nav_msgs::OdometryConstPtr pMsg)
 Command_Data_t::Command_Data_t()
 {
     rcv_stamp = ros::Time(0);
+    set_parameter();
 }
 
 

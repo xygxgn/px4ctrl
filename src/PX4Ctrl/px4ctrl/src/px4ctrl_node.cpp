@@ -6,11 +6,12 @@ int main(int argc, char *argv[])
     ros::init(argc, argv, "px4ctrl");
     ros::NodeHandle nh("~");
 
-    Parameter_t param(nh);
+    Parameter_t::config_from_ros_handle(nh);
+    
 
     /* Finite state machine */
     PX4FSM fsm;
-    fsm.set_parameter(param);
+    fsm.set_parameter();
 
     /* Register ROS Master */
     ROSRegister ros_register(nh, fsm);
@@ -32,7 +33,7 @@ int main(int argc, char *argv[])
     }
 
     /* machine begins */
-    ros::Rate rate(param.ctrl_freq_max);
+    ros::Rate rate(Parameter_t::ctrl_freq_max);
     while (ros::ok())
     {
         fsm.process();

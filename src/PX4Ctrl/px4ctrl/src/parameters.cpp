@@ -1,5 +1,16 @@
 #include "parameters.h"
 
+double Parameter_t::mass;
+double Parameter_t::gravity;
+double Parameter_t::ctrl_freq_max;
+double Parameter_t::max_manual_vel;
+
+Parameter_t::MsgTimeout Parameter_t::msg_timeout;
+Parameter_t::RCReverse Parameter_t::rc_reverse;
+Parameter_t::ThrustMapping Parameter_t::thrust_mapping;
+Parameter_t::Gain Parameter_t::gain;
+
+
 
 void Parameter_t::config_from_ros_handle(const ros::NodeHandle &nh)
 {
@@ -7,7 +18,7 @@ void Parameter_t::config_from_ros_handle(const ros::NodeHandle &nh)
     read_essential_param(nh, "gravity", gravity);
     read_essential_param(nh, "ctrl_freq_max", ctrl_freq_max);
     read_essential_param(nh, "max_manual_vel", max_manual_vel);
-    
+	
 
     read_essential_param(nh, "msg_timeout/state", msg_timeout.state);
     read_essential_param(nh, "msg_timeout/rc", msg_timeout.rc);

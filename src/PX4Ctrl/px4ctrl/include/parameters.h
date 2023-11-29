@@ -7,12 +7,12 @@
 class Parameter_t
 {
 public:
-    double mass;
-    double gravity;
-    double ctrl_freq_max;
-    double max_manual_vel;
+    static double mass;
+    static double gravity;
+    static double ctrl_freq_max;
+    static double max_manual_vel;
 
-    struct MsgTimeout
+    static struct MsgTimeout
     {
         double state;
         double rc;
@@ -22,7 +22,7 @@ public:
         double cmd;
     } msg_timeout;
 
-	struct RCReverse
+	static struct RCReverse
 	{
 		bool roll;
 		bool pitch;
@@ -30,7 +30,7 @@ public:
 		bool throttle;
 	} rc_reverse;
 
-	struct ThrustMapping
+	static struct ThrustMapping
 	{
 		bool print_val;
 		double K1;
@@ -40,7 +40,7 @@ public:
 		double hover_percentage;
 	} thrust_mapping;
 
-    struct Gain
+    static struct Gain
     {
         double Kp0, Kp1, Kp2;
         double Kv0, Kv1, Kv2;
@@ -48,13 +48,12 @@ public:
     
     
     Parameter_t() {}
-    Parameter_t(const ros::NodeHandle &nh) { config_from_ros_handle(nh); }
+
+    static void config_from_ros_handle(const ros::NodeHandle &);
 
 private:
-    void config_from_ros_handle(const ros::NodeHandle &);
-
     template <typename TName, typename TVal>
-    void read_essential_param(const ros::NodeHandle &nh, const TName &name, TVal &val)
+    static void read_essential_param(const ros::NodeHandle &nh, const TName &name, TVal &val)
     {
         if (!nh.getParam(name, val))
         {
@@ -64,6 +63,5 @@ private:
     }
 
 };
-
 
 #endif

@@ -31,7 +31,7 @@ public:
     /* Constructor */
     PX4FSM();
 
-    void set_parameter(const Parameter_t &);
+    void set_parameter();
 
     void process();
 
