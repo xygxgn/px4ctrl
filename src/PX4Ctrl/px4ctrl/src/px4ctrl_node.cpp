@@ -11,7 +11,6 @@ int main(int argc, char *argv[])
 
     /* Finite state machine */
     PX4FSM fsm;
-    fsm.set_parameter();
 
     /* Register ROS Master */
     ROSRegister ros_register(nh, fsm);
