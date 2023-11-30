@@ -7,6 +7,11 @@
 class Parameter_t
 {
 public:
+    Parameter_t() {}
+
+    static void config_from_ros_handle(const ros::NodeHandle &);
+
+
     static double mass;
     static double gravity;
     static double ctrl_freq_max;
@@ -45,11 +50,6 @@ public:
         double Kp0, Kp1, Kp2;
         double Kv0, Kv1, Kv2;
     } gain;
-    
-    
-    Parameter_t() {}
-
-    static void config_from_ros_handle(const ros::NodeHandle &);
 
 private:
     template <typename TName, typename TVal>

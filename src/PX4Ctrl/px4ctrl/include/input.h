@@ -18,10 +18,11 @@
 class Base_Data_t
 {
 public:
-    ros::Time rcv_stamp; // The timestamp of the received data
-    double msg_timeout;
     virtual void set_parameter() = 0;
     virtual inline bool is_received(const ros::Time &) const = 0;
+
+    ros::Time rcv_stamp; // The timestamp of the received data
+    double msg_timeout;
 };
 
 
@@ -33,10 +34,6 @@ public:
 class State_Data_t : public Base_Data_t
 {
 public:
-    mavros_msgs::State current_state;
-    mavros_msgs::State state_before_offboard;
-
-
     State_Data_t();
 
     virtual void set_parameter() override {
@@ -47,6 +44,10 @@ public:
 
     void feed(const mavros_msgs::StateConstPtr);
 
+
+    mavros_msgs::State current_state;
+    mavros_msgs::State state_before_offboard;
+
 private:
 };
 
@@ -55,6 +56,17 @@ private:
 class RC_Data_t : public Base_Data_t
 {
 public:
+    RC_Data_t();
+
+    virtual void set_parameter() override {
+        msg_timeout = Parameter_t::msg_timeout.rc; }
+
+    virtual inline bool is_received(const ros::Time &now_time) const override { 
+        return (now_time - rcv_stamp).toSec() < msg_timeout; }
+
+    void feed(mavros_msgs::RCInConstPtr);
+
+
     mavros_msgs::RCIn rc_msg;
 
     bool have_init_last_rc;
@@ -78,17 +90,6 @@ public:
 
     bool toggle_reboot;
 
-
-    RC_Data_t();
-
-    virtual void set_parameter() override {
-        msg_timeout = Parameter_t::msg_timeout.rc; }
-
-    virtual inline bool is_received(const ros::Time &now_time) const override { 
-        return (now_time - rcv_stamp).toSec() < msg_timeout; }
-
-    void feed(mavros_msgs::RCInConstPtr);
-
 private:
     
 };
@@ -98,9 +99,6 @@ private:
 class Battery_Data_t : public Base_Data_t
 {
 public:
-    sensor_msgs::BatteryState battery_msg;
-
-
     Battery_Data_t();
 
     virtual void set_parameter() override {
@@ -111,6 +109,9 @@ public:
 
     void feed(sensor_msgs::BatteryStateConstPtr);
 
+
+    sensor_msgs::BatteryState battery_msg;
+
 private:
 };
 
@@ -119,14 +120,6 @@ private:
 class Imu_Data_t : public Base_Data_t
 {
 public:
-    sensor_msgs::Imu imu_msg;
-
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    Eigen::Quaterniond q; // orientation
-    Eigen::Vector3d w; // angular velocity
-    Eigen::Vector3d a; // linear acceleration
-
-
     Imu_Data_t();
 
     virtual void set_parameter() override {
@@ -137,6 +130,14 @@ public:
     virtual inline bool is_received(const ros::Time &now_time) const override { 
         return (now_time - rcv_stamp).toSec() < msg_timeout; }
 
+
+    sensor_msgs::Imu imu_msg;
+
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    Eigen::Quaterniond q; // orientation
+    Eigen::Vector3d w; // angular velocity
+    Eigen::Vector3d a; // linear acceleration
+
 private:
 };
 
@@ -145,13 +146,13 @@ private:
 class FCU_Data_t
 {
 public:
+    FCU_Data_t() { };
+    
     State_Data_t state_data;
     RC_Data_t rc_data;
     Battery_Data_t battery_data;
     Imu_Data_t imu_data;
 
-    FCU_Data_t() { };
-    
 private:
 };
 
@@ -165,15 +166,6 @@ private:
 class Odom_Data_t : public Base_Data_t
 {
 public:
-    nav_msgs::Odometry odom_msg;
-
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    Eigen::Quaterniond q; // orientation
-    Eigen::Vector3d w; // angular velocity
-    Eigen::Vector3d p; // position
-    Eigen::Vector3d v; // linear velocity
-
-    
     Odom_Data_t();
 
     virtual void set_parameter() override {
@@ -184,6 +176,15 @@ public:
 
     void feed(nav_msgs::OdometryConstPtr);
 
+
+    nav_msgs::Odometry odom_msg;
+
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    Eigen::Quaterniond q; // orientation
+    Eigen::Vector3d w; // angular velocity
+    Eigen::Vector3d p; // position
+    Eigen::Vector3d v; // linear velocity
+
 private:
 };
 
@@ -192,17 +193,6 @@ private:
 class Command_Data_t : public Base_Data_t
 {
 public:
-    quadrotor_msgs::PositionCommand msg;
-
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    Eigen::Vector3d p;
-    Eigen::Vector3d v;
-    Eigen::Vector3d a;
-    Eigen::Vector3d j;
-    double yaw;
-    double yaw_rate;
-
-
     Command_Data_t();
 
     virtual void set_parameter() override {
@@ -212,6 +202,17 @@ public:
         return (now_time - rcv_stamp).toSec() < msg_timeout; }
 
     void feed(quadrotor_msgs::PositionCommandConstPtr);
+
+
+    quadrotor_msgs::PositionCommand msg;
+
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    Eigen::Vector3d p;
+    Eigen::Vector3d v;
+    Eigen::Vector3d a;
+    Eigen::Vector3d j;
+    double yaw;
+    double yaw_rate;
 
 private:
 };

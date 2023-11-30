@@ -18,6 +18,13 @@ extern ros::ServiceClient reboot_srv;
 class PX4FSM
 {
 public:
+    PX4FSM();
+
+    void set_parameter();
+
+    void process();
+
+
     FCU_Data_t fcu_data;
     Odom_Data_t odom_data;
     Command_Data_t command_data;
@@ -27,27 +34,7 @@ public:
 	Eigen::Vector4d hover_pose; // [x,y,z,yaw]'
 	ros::Time last_set_hover_pose_time;
 
-
-    /* Constructor */
-    PX4FSM();
-
-    void set_parameter();
-
-    void process();
-
 private:
-    double max_manual_vel;
-    Parameter_t::RCReverse rc_reverse;
-
-    /* State of drone */
-    enum State_t
-    {
-        MANUAL = 1,
-        HOVER,
-        COMMAND
-    } state_;
-
-
     /* Set hover mode */
     void set_hover_with_rc();
     void set_hover_with_odom();
@@ -60,6 +47,18 @@ private:
     bool toggle_offboard(bool on_off);
 	void publish_attitude_ctrl(const Controller_t &, const ros::Time &);
     
+
+    double max_manual_vel;
+    Parameter_t::RCReverse rc_reverse;
+
+    /* State of drone */
+    enum State_t
+    {
+        MANUAL = 1,
+        HOVER,
+        COMMAND
+    } state_;
+
 };
 
 

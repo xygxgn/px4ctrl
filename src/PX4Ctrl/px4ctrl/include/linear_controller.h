@@ -8,15 +8,7 @@
 
 /** @brief Desired position, velocity, acceleration, attitude of drone */
 struct Desired_PVAQ_t
-{
-    Eigen::Vector3d p;
-    Eigen::Vector3d v;
-    Eigen::Vector3d a;
-    Eigen::Vector3d j;
-    Eigen::Quaterniond q;
-    double yaw, yaw_rate;
-
-    
+{   
 	Desired_PVAQ_t() {} // default constructor
 
     Desired_PVAQ_t(Odom_Data_t &odom) 
@@ -26,6 +18,14 @@ struct Desired_PVAQ_t
           q(odom.q),
           yaw(uav_utils::get_yaw_from_quaternion(odom.q)),
           yaw_rate(0) {}
+
+
+    Eigen::Vector3d p;
+    Eigen::Vector3d v;
+    Eigen::Vector3d a;
+    Eigen::Vector3d j;
+    Eigen::Quaterniond q;
+    double yaw, yaw_rate;
 };
 
 
